@@ -33,21 +33,54 @@ def extract_text_from_file(file):
 
     return text.strip() if text.strip() else None
 
-#Need to modify extracted skills.
-# Extract skills from the resume text by searching for a "Skills:" section
-def extract_skills_from_text(text):
-    # This regex looks for a line starting with "Skills:" (case-insensitive)
-    pattern = re.compile(r"Skills\s*:\s*(.*)", re.IGNORECASE)
-    matches = pattern.findall(text)
-    if matches:
-        # Assuming the first occurrence is the skills list
-        skills_line = matches[0]
-        # Split the skills by comma, semicolon, or newline and remove extra whitespace
-        skills = re.split(r",|;|\n", skills_line)
-        skills = [skill.strip() for skill in skills if skill.strip()]
-        return skills
-    else:
-        return []
+
+def extract_skills_from_text(resume_text):
+    # Define potential headings for the Skills section (case-insensitive)
+    skill_headings = {
+        'skills', 'technical skills', 'core competencies', 'key skills',
+        'skills summary', 'technical proficiencies', 'areas of expertise',
+        'competencies'
+    }
+
+    # Common section headings that typically follow Skills (case-insensitive)
+    common_sections = {
+        'work experience', 'experience', 'employment history', 'education',
+        'academic background', 'projects', 'project work',
+        'certifications & course', 'awards', 'hobbies', 'interests',
+        'publications', 'volunteer experience', 'languages', 'references',
+        'honors and awards', 'certifications', 'open source contributions',
+        'objective'
+    }
+
+    lines = resume_text.split('\n')
+    skills_section = []
+    found_skills = False
+
+    for line in lines:
+        stripped_line = line.strip()
+        lower_line = stripped_line.lower()
+
+        # Detect Skills section start
+        if not found_skills:
+            if lower_line in skill_headings:
+                found_skills = True
+            continue
+
+        # Stop when encountering a new section
+        if lower_line in common_sections:
+            break
+
+        # Skip empty lines at the start of the Skills section
+        if not skills_section and not stripped_line:
+            continue
+
+        skills_section.append(stripped_line)
+
+    # Clean up trailing empty lines
+    while skills_section and not skills_section[-1]:
+        skills_section.pop()
+
+    return skills_section
 
 
 # Load ML model and TF-IDF vectorizer from disk
@@ -98,6 +131,7 @@ def process_resume(file):
 
 app = Flask(__name__, template_folder="templates")
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     predicted_job = None
@@ -113,10 +147,11 @@ def index():
             if file.filename == "":
                 error_message = "No selected file!"
             else:
-                error_message, predicted_job, extracted_skills, extracted_text = process_resume(file)
+                error_message, predicted_job, extracted_skills, extracted_text = process_resume(
+                    file)
 
-    return render_template("index.html", 
-                           predicted_job=predicted_job or "", 
+    return render_template("index.html",
+                           predicted_job=predicted_job or "",
                            error_message=error_message or "",
                            extracted_skills=extracted_skills,
                            extracted_text=extracted_text)
