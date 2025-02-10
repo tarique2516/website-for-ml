@@ -33,11 +33,11 @@ def extract_text_from_file(file):
 
     return text.strip() if text.strip() else None
 
-
+#Need to modify extracted skills.
 # Extract skills from the resume text by searching for a "Skills:" section
 def extract_skills_from_text(text):
     # This regex looks for a line starting with "Skills:" (case-insensitive)
-    pattern = re.compile(r"skills\s*:\s*(.*)", re.IGNORECASE)
+    pattern = re.compile(r"Skills\s*:\s*(.*)", re.IGNORECASE)
     matches = pattern.findall(text)
     if matches:
         # Assuming the first occurrence is the skills list
@@ -72,11 +72,11 @@ def process_resume(file):
     rf, tfidf = load_model_and_vectorizer()
 
     if rf is None or tfidf is None:
-        return "[ERROR] ML model is missing!", None, None
+        return "[ERROR] ML model is missing!", None, None, None
 
     text = extract_text_from_file(file)
     if not text:
-        return "[ERROR] Invalid or unsupported file format!", None, None
+        return "[ERROR] Invalid or unsupported file format!", None, None, None
 
     # Extract skills from the text
     extracted_skills = extract_skills_from_text(text)
@@ -90,20 +90,20 @@ def process_resume(file):
         predicted_job = rf.predict(text_vectorized)[0]
         print("Predicted Job:", predicted_job)
 
-        return None, predicted_job, extracted_skills
+        return None, predicted_job, extracted_skills, text
     except Exception as e:
         print(f"[ERROR] Prediction failed: {e}")
-        return f"[ERROR] Prediction failed: {e}", None, extracted_skills
+        return f"[ERROR] Prediction failed: {e}", None, extracted_skills, text
 
 
 app = Flask(__name__, template_folder="templates")
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     predicted_job = None
     error_message = None
     extracted_skills = []
+    extracted_text = ""
 
     if request.method == "POST":
         if "resume" not in request.files:
@@ -113,13 +113,13 @@ def index():
             if file.filename == "":
                 error_message = "No selected file!"
             else:
-                error_message, predicted_job, extracted_skills = process_resume(
-                    file)
+                error_message, predicted_job, extracted_skills, extracted_text = process_resume(file)
 
-    return render_template("index.html",
-                           predicted_job=predicted_job or "",
+    return render_template("index.html", 
+                           predicted_job=predicted_job or "", 
                            error_message=error_message or "",
-                           extracted_skills=extracted_skills)
+                           extracted_skills=extracted_skills,
+                           extracted_text=extracted_text)
 
 
 if __name__ == "__main__":

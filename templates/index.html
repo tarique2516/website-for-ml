@@ -36,6 +36,14 @@
     </div>
     {% endif %}
 
+    <!-- Display extracted text if available -->
+    {% if extracted_text %}
+    <div class="mt-4">
+      <h2>Extracted Text:</h2>
+      <pre class="bg-light p-3">{{ extracted_text }}</pre>
+    </div>
+    {% endif %}
+
     <!-- Resume Upload Form -->
     <form action="/" method="POST" enctype="multipart/form-data" class="mt-4">
       <div class="mb-3">
