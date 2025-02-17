@@ -4,3 +4,6 @@ python-docx
 pdfplumber
 scikit-learn
 numpy
+spacy
+mysql-connector-python
+nltk
