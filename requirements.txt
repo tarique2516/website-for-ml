@@ -1,9 +1,7 @@
 Flask
-gunicorn
-python-docx
-pdfplumber
 scikit-learn
-numpy
 spacy
 mysql-connector-python
-nltk
+pdfplumber
+python-docx
+
